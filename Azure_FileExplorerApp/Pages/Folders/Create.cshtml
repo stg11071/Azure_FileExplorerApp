@@ -1,0 +1,18 @@
+﻿@page
+@model Azure_FileExplorerApp.Pages.Folders.FoldersCreateModel
+
+@{
+    ViewData["Title"] = "Створити нову папку";
+}
+
+<h1>Створити нову папку</h1>
+
+<form method="post">
+    <div class="form-group">
+        <label asp-for="FolderName"></label>
+        <input asp-for="FolderName" class="form-control" />
+        <span asp-validation-for="FolderName" class="text-danger"></span>
+    </div>
+    <button type="submit" class="btn btn-primary">Створити</button>
+    <a asp-page="/Folders/Index" class="btn btn-secondary">Назад</a>
+</form>

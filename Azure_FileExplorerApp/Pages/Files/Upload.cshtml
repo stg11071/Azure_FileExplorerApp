@@ -1,0 +1,17 @@
+﻿@page "{folderId:int}"
+@model Azure_FileExplorerApp.Pages.Files.FilesUploadModel
+
+@{
+    ViewData["Title"] = "Завантажити файл";
+}
+
+<h1>Завантажити файл</h1>
+
+<form enctype="multipart/form-data" method="post">
+    <div class="form-group">
+        <label for="file">Оберіть файл:</label>
+        <input type="file" id="file" name="file" class="form-control" />
+    </div>
+    <button type="submit" class="btn btn-primary">Завантажити</button>
+    <a asp-page="/Files/Index" asp-route-folderId="@Model.FolderId" class="btn btn-secondary">Назад</a>
+</form>

@@ -1,0 +1,33 @@
+﻿@page "{fileId:int}"
+@model Azure_FileExplorerApp.Pages.Files.FilesDetailsModel
+
+@{
+    ViewData["Title"] = "Деталі файлу";
+}
+
+<h1>Деталі файлу: @Model.FileMetadata.FileName</h1>
+
+<table class="table">
+    <tr>
+        <th>Назва файлу</th>
+        <td>@Model.FileMetadata.FileName</td>
+    </tr>
+    <tr>
+        <th>Розмір</th>
+        <td>@Model.FileMetadata.Size</td>
+    </tr>
+    <tr>
+        <th>Дата завантаження</th>
+        <td>@Model.FileMetadata.UploadedAt.ToString("dd/MM/yyyy HH:mm")</td>
+    </tr>
+    <tr>
+        <th>Завантажено користувачем</th>
+        <td>@Model.FileMetadata.UploadedBy</td>
+    </tr>
+    <tr>
+        <th>URL до файлу</th>
+        <td><a href="@Model.FileMetadata.BlobUri" target="_blank">@Model.FileMetadata.BlobUri</a></td>
+    </tr>
+</table>
+
+<a asp-page="/Files/Index" asp-route-folderId="@Model.FileMetadata.FolderId" class="btn btn-secondary">Назад</a>

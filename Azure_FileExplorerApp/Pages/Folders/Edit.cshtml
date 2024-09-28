@@ -1,0 +1,17 @@
+﻿@page "{folderId:int}"
+@model Azure_FileExplorerApp.Pages.Folders.FoldersEditModel
+@{
+    ViewData["Title"] = "Редагування папки";
+}
+
+<h1>Редагувати назву папки</h1>
+
+<form method="post">
+    <div class="form-group">
+        <label asp-for="FolderName" class="control-label"></label>
+        <input asp-for="FolderName" class="form-control" />
+        <span asp-validation-for="FolderName" class="text-danger"></span>
+    </div>
+    <button type="submit" class="btn btn-primary">Зберегти</button>
+    <a asp-page="/Folders/Index" class="btn btn-secondary">Назад</a>
+</form>

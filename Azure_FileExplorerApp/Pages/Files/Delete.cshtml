@@ -1,0 +1,15 @@
+﻿@page "{fileId:int}"
+@model Azure_FileExplorerApp.Pages.Files.FilesDeleteModel
+
+@{
+    ViewData["Title"] = "Видалити файл";
+}
+
+<h1>Видалити файл</h1>
+
+<p>Ви дійсно хочете видалити файл "<strong>@Model.FileMetadata.FileName</strong>"?</p>
+
+<form method="post">
+    <button type="submit" class="btn btn-danger">Видалити</button>
+    <a asp-page="/Files/Index" asp-route-folderId="@Model.FolderId" class="btn btn-secondary">Назад</a>
+</form>

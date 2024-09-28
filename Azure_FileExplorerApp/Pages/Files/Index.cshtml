@@ -1,0 +1,41 @@
+﻿@page "{folderId:int}"
+@model Azure_FileExplorerApp.Pages.Files.IndexModel
+
+@{
+    ViewData["Title"] = "Файли у папці";
+}
+
+<h1>Файли у папці: @Model.FolderName</h1>
+
+<p>
+    <a asp-page="/Files/Upload" asp-route-folderId="@Model.FolderId" class="btn btn-primary">Завантажити новий файл</a>
+</p>
+
+<table class="table">
+    <thead>
+    <tr>
+        <th>Назва файлу</th>
+        <th>Розмір</th>
+        <th>Дата завантаження</th>
+        <th>Дії</th>
+    </tr>
+    </thead>
+    <tbody>
+    @foreach (var file in Model.Files)
+    {
+        <tr>
+            <td><a href="@file.BlobUri" target="_blank">@file.FileName</a></td>
+            <td>@file.Size</td>
+            <td>@file.UploadedAt.ToString("dd/MM/yyyy")</td>
+            <td>
+                <a asp-page="/Files/Details" asp-route-fileId="@file.Id" class="btn btn-info">Details</a> |
+                <a asp-page="/Files/Delete" asp-route-fileId="@file.Id" class="btn btn-danger">Видалити</a>
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>
+
+<p>
+    <a asp-page="/Folders/Index" class="btn btn-secondary">Назад</a>
+</p>

@@ -1,0 +1,15 @@
+﻿@page "{folderId:int}"
+@model Azure_FileExplorerApp.Pages.Folders.FoldersDeleteModel
+
+@{
+    ViewData["Title"] = "Видалити папку";
+}
+
+<h1>Видалити папку</h1>
+
+<p>Ви дійсно хочете видалити папку "<strong>@Model.Folder.Name</strong>" і всі файли, що в ній знаходяться?</p>
+
+<form method="post">
+    <button type="submit" class="btn btn-danger">Видалити</button>
+    <a asp-page="/Folders/Index" class="btn btn-secondary">Назад</a>
+</form>
