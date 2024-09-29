@@ -1,9 +1,12 @@
 using Azure.Identity;
+using Azure_FileExplorerApp;
 using Azure_FileExplorerApp.Data;
 using Azure_FileExplorerApp.Interfaces;
 using Azure_FileExplorerApp.Services;
+using AzureTeacherStudentSystem;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Azure;
+using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -33,6 +36,10 @@ builder.Services.AddAzureClients(clientBuilder =>
 
 
 builder.Services.AddTransient<IFileService, FileService>();
+builder.Services.AddTransient<IFolderService, FolderService>();
+
+builder.Services.AddSingleton(_ => ConnectionMultiplexer.Connect(builder.Configuration["Redis"]).GetDatabase());
+builder.Services.AddScoped<ICacheService, RedisCacheService>();
 
 builder.Services.AddRazorPages();
 
@@ -45,6 +52,7 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
 app.UseStaticFiles();
 
 app.UseRouting();

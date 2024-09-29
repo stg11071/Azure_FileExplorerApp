@@ -1,5 +1,5 @@
 ﻿@page "{folderId:int}"
-@model Azure_FileExplorerApp.Pages.Files.IndexModel
+@model Azure_FileExplorerApp.Pages.Files.FilesIndexModel
 
 @{
     ViewData["Title"] = "Файли у папці";
@@ -8,7 +8,7 @@
 <h1>Файли у папці: @Model.FolderName</h1>
 
 <p>
-    <a asp-page="/Files/Upload" asp-route-folderId="@Model.FolderId" class="btn btn-primary">Завантажити новий файл</a>
+    <a asp-page="/Files/Upload" asp-route-folderId="@Model.FolderId" class="btn btn-primary btn-sm">Завантажити новий файл</a>
 </p>
 
 <table class="table">
@@ -28,8 +28,8 @@
             <td>@file.Size</td>
             <td>@file.UploadedAt.ToString("dd/MM/yyyy")</td>
             <td>
-                <a asp-page="/Files/Details" asp-route-fileId="@file.Id" class="btn btn-info">Details</a> |
-                <a asp-page="/Files/Delete" asp-route-fileId="@file.Id" class="btn btn-danger">Видалити</a>
+                    <a asp-page="/Files/Details" asp-route-fileId="@file.Id" class="btn btn-info btn-sm me-2">Details</a>
+                    <a asp-page="/Files/Delete" asp-route-fileId="@file.Id" class="btn btn-danger btn-sm me-2">Видалити</a>
             </td>
         </tr>
     }
@@ -37,5 +37,5 @@
 </table>
 
 <p>
-    <a asp-page="/Folders/Index" class="btn btn-secondary">Назад</a>
+    <a asp-page="/Folders/Index" class="btn btn-secondary btn-sm mt-3">Назад</a>
 </p>

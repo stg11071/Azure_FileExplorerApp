@@ -8,7 +8,7 @@
 <h1>Файловий провідник</h1>
 
 <p>
-    <a asp-page="/Folders/Create" class="btn btn-primary">Створити нову папку</a>
+    <a asp-page="/Folders/Create" class="btn btn-primary btn-sm">Створити нову папку</a>
 </p>
 
 <table class="table">
@@ -24,9 +24,9 @@
         <tr>
             <td>@folder.Name</td>
             <td>
-                <a asp-page="/Files/Index" asp-route-folderId="@folder.Id" class="btn btn-info">Переглянути файли</a> |
-                <a asp-page="/Folders/Edit" asp-route-folderId="@folder.Id" class="btn btn-warning">Редагувати</a> |
-                <a asp-page="/Folders/Delete" asp-route-folderId="@folder.Id" class="btn btn-danger">Видалити</a>
+                <a asp-page="/Files/Index" asp-route-folderId="@folder.Id" class="btn btn-info btn-sm me-3">Переглянути файли</a>
+                <a asp-page="/Folders/Edit" asp-route-folderId="@folder.Id" class="btn btn-warning btn-sm me-3">Редагувати</a>
+                <a asp-page="/Folders/Delete" asp-route-folderId="@folder.Id" class="btn btn-danger btn-sm me-3">Видалити</a>
             </td>
         </tr>
     }

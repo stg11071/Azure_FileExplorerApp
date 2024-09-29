@@ -10,6 +10,6 @@
 <p>Ви дійсно хочете видалити файл "<strong>@Model.FileMetadata.FileName</strong>"?</p>
 
 <form method="post">
-    <button type="submit" class="btn btn-danger">Видалити</button>
-    <a asp-page="/Files/Index" asp-route-folderId="@Model.FolderId" class="btn btn-secondary">Назад</a>
+    <button type="submit" class="btn btn-danger btn-sm mt-3 me-2">Видалити</button>
+    <a asp-page="/Files/Index" asp-route-folderId="@Model.FolderId" class="btn btn-secondary btn-sm mt-3">Назад</a>
 </form>

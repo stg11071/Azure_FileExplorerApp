@@ -1,4 +1,5 @@
 ﻿using Azure_FileExplorerApp.Data;
+using Azure_FileExplorerApp.DTOs;
 using Azure_FileExplorerApp.Interfaces;
 using Azure_FileExplorerApp.Models;
 using Microsoft.EntityFrameworkCore;
@@ -10,34 +11,41 @@ public class FileService : IFileService
     private readonly BlobService _blobService;
     private readonly DataContext _dbContext;
     private readonly ILogger<FileService> _logger;
+    private readonly ICacheService _cacheService;
 
-    public FileService(BlobService blobService, DataContext dbContext, ILogger<FileService> logger)
+    public FileService(BlobService blobService, DataContext dbContext, ILogger<FileService> logger, ICacheService cacheService)
     {
         _blobService = blobService;
         _dbContext = dbContext;
         _logger = logger;
+        _cacheService = cacheService;
     }
 
-    // завантаження файлу в папку (якщо передано folderId)
+    // Завантаження файлу в папку (якщо передано folderId)
     public async Task<string> UploadFileAsync(string fileName, IEnumerable<byte> data, int? folderId = null)
     {
         try
         {
-            // завантаження файлу в Blob Storage через BlobService
             var blobUrl = await _blobService.UploadFileAsync(fileName, data);
 
-            // збереження метаданих у базі даних
             var fileMetadata = new FileMetadata
             {
                 FileName = fileName,
                 BlobUri = blobUrl,
-                Size = data.Count(),  
-                UploadedBy = "Anonymous", 
-                FolderId = folderId ?? 0 // якщо папка не вказана, встановлюється значення 0
+                Size = data.Count(),
+                UploadedBy = "Anonymous",
+                FolderId = folderId ?? 0 // якщо папка не вказана, встановлюємо значення 0
             };
 
             _dbContext.Files.Add(fileMetadata);
             await _dbContext.SaveChangesAsync();
+
+            // Очищаємо кеш для всіх файлів та файлів у конкретній папці
+            await _cacheService.RemoveCacheData("all_files");
+            if (folderId.HasValue)
+            {
+                await _cacheService.RemoveCacheData($"files_in_folder_{folderId}");
+            }
 
             return blobUrl;
         }
@@ -48,7 +56,7 @@ public class FileService : IFileService
         }
     }
 
-    // видалення файлу через Blob URI
+    // Видалення файлу через Blob URI
     public async Task DeleteFileAsync(string blobUri)
     {
         try
@@ -65,6 +73,11 @@ public class FileService : IFileService
             // видалення метаданих з бази даних
             _dbContext.Files.Remove(fileMetadata);
             await _dbContext.SaveChangesAsync();
+
+            // очищення кешу для всіх файлів і файлів у конкретній папці
+            await _cacheService.RemoveCacheData("all_files");
+            await _cacheService.RemoveCacheData($"file_{fileMetadata.Id}");
+            await _cacheService.RemoveCacheData($"files_in_folder_{fileMetadata.FolderId}");
         }
         catch (Exception ex)
         {
@@ -73,16 +86,30 @@ public class FileService : IFileService
         }
     }
 
-    // отримання метаданих файлу за ID
+    // Отримання метаданих файлу за ID
     public async Task<FileMetadata> GetFileMetadataAsync(int id)
     {
         try
         {
+            var cacheKey = $"file_{id}";
+
+            // перевіряємо наявність файлу в кеші
+            var cachedFile = await _cacheService.GetCacheData<FileMetadata>(cacheKey);
+            if (cachedFile != null)
+            {
+                _logger.LogInformation("Отримано метадані файлу з кешу");
+                return cachedFile;
+            }
+
+            // якщо в кеші немає, отримуємо файл з бази даних
             var fileMetadata = await _dbContext.Files.FindAsync(id);
             if (fileMetadata == null)
             {
                 throw new Exception($"File with ID {id} not found");
             }
+
+            // зберігаємо дані в кеші
+            await _cacheService.AddCacheData(cacheKey, fileMetadata);
 
             return fileMetadata;
         }
@@ -93,12 +120,28 @@ public class FileService : IFileService
         }
     }
 
-    // отримання всіх файлів
+    // Отримання всіх файлів
     public async Task<IEnumerable<FileMetadata>> GetAllFilesAsync()
     {
         try
         {
-            return await _dbContext.Files.ToListAsync();
+            var cacheKey = "all_files";
+
+            // перевіряємо наявність файлів у кеші
+            var cachedFiles = await _cacheService.GetCacheData<IEnumerable<FileMetadata>>(cacheKey);
+            if (cachedFiles != null)
+            {
+                _logger.LogInformation("Отримано всі файли з кешу");
+                return cachedFiles;
+            }
+
+            // якщо файлів немає у кеші, отримуємо їх з бази даних
+            var files = await _dbContext.Files.ToListAsync();
+
+            // зберігаємо файли у кеші
+            await _cacheService.AddCacheData(cacheKey, files);
+
+            return files;
         }
         catch (Exception ex)
         {
@@ -107,15 +150,43 @@ public class FileService : IFileService
         }
     }
 
-    // отримання всіх файлів в конкретній папці
-    public async Task<IEnumerable<FileMetadata>> GetFilesInFolderAsync(int folderId)
+    // Отримання всіх файлів у конкретній папці
+    public async Task<IEnumerable<FileMetadataDTO>> GetFilesInFolderAsync(int folderId)
     {
         try
         {
-            return await _dbContext.Files
+            var cacheKey = $"files_in_folder_{folderId}";
+
+            // перевіряємо наявність файлів у кеші
+            var cachedFiles = await _cacheService.GetCacheData<IEnumerable<FileMetadataDTO>>(cacheKey);
+            if (cachedFiles != null)
+            {
+                _logger.LogInformation("Отримано файли з кешу для папки {FolderId}", folderId);
+                return cachedFiles;
+            }
+
+            // якщо файлів немає у кеші, отримуємо їх з бази даних
+            var files = await _dbContext.Files
                 .Include(f => f.Folder)
                 .Where(f => f.FolderId == folderId)
                 .ToListAsync();
+
+            // перетворюємо файли на DTO для кешування
+            var filesDto = files.Select(f => new FileMetadataDTO
+            {
+                Id = f.Id,
+                FileName = f.FileName,
+                BlobUri = f.BlobUri,
+                Size = f.Size,
+                UploadedBy = f.UploadedBy,
+                UploadedAt = f.UploadedAt,
+                FolderName = f.Folder.Name,
+            });
+
+            // зберігаємо файли у кеші як DTO
+            await _cacheService.AddCacheData(cacheKey, filesDto);
+
+            return filesDto;
         }
         catch (Exception ex)
         {
@@ -124,96 +195,8 @@ public class FileService : IFileService
         }
     }
 
-    // створення нової папки
-    public async Task<Folder> CreateFolderAsync(string folderName)
-    {
-        try
-        {
-            var folder = new Folder
-            {
-                Name = folderName
-            };
-
-            _dbContext.Folders.Add(folder);
-            await _dbContext.SaveChangesAsync();
-
-            return folder;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error occurred while creating folder {FolderName}", folderName);
-            throw;
-        }
-    }
-
-    // отримання всіх папок
-    public async Task<IEnumerable<Folder>> GetAllFoldersAsync()
-    {
-        try
-        {
-            return await _dbContext.Folders.ToListAsync();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error occurred while getting all folders");
-            throw;
-        }
-    }
-
-
-    public async Task<Folder> GetFolderByIdAsync(int folderId)
-    {
-        try
-        {
-            var folder = await _dbContext.Folders.FindAsync(folderId);
-            if (folder == null)
-            {
-                throw new Exception($"Folder with ID {folderId} not found");
-            }
-            return folder;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error occurred while getting folder with ID {FolderId}", folderId);
-            throw;
-        }
-    }
-
-    // видалення папки разом з усіма файлами
-    public async Task DeleteFolderAsync(int folderId)
-    {
-        try
-        {
-            var folder = await _dbContext.Folders.Include(f => f.Files).FirstOrDefaultAsync(f => f.Id == folderId);
-            if (folder == null)
-            {
-                throw new Exception($"Folder with ID {folderId} not found");
-            }
-
-            // видалення всіх файлів, що належать папці
-            foreach (var file in folder.Files)
-            {
-                await _blobService.DeleteFileAsync(file.FileName);
-                _dbContext.Files.Remove(file);
-            }
-
-            // видалення папки
-            _dbContext.Folders.Remove(folder);
-            await _dbContext.SaveChangesAsync();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error occurred while deleting folder with ID {FolderId}", folderId);
-            throw;
-        }
-    }
-
-    public async Task UpdateFolderAsync(Folder folder)
-    {
-        _dbContext.Folders.Update(folder);
-        await _dbContext.SaveChangesAsync();
-    }
 }
+
 
 
 

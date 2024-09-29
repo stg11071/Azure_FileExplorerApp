@@ -1,43 +1,39 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using Azure_FileExplorerApp.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
-using Azure_FileExplorerApp.Data;
 using Azure_FileExplorerApp.Models;
 
-namespace Azure_FileExplorerApp.Pages.Folders
+namespace Azure_FileExplorerApp.Pages.Folders;
+
+public class DetailsModel : PageModel
 {
-    public class DetailsModel : PageModel
+    private readonly DataContext _context;
+
+    public DetailsModel(DataContext context)
     {
-        private readonly Azure_FileExplorerApp.Data.DataContext _context;
+        _context = context;
+    }
 
-        public DetailsModel(Azure_FileExplorerApp.Data.DataContext context)
+    public Folder Folder { get; set; } = default!;
+
+    public async Task<IActionResult> OnGetAsync(int? id)
+    {
+        if (id == null)
         {
-            _context = context;
+            return NotFound();
         }
 
-        public Folder Folder { get; set; } = default!;
-
-        public async Task<IActionResult> OnGetAsync(int? id)
+        var folder = await _context.Folders.FirstOrDefaultAsync(m => m.Id == id);
+        if (folder == null)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var folder = await _context.Folders.FirstOrDefaultAsync(m => m.Id == id);
-            if (folder == null)
-            {
-                return NotFound();
-            }
-            else
-            {
-                Folder = folder;
-            }
-            return Page();
+            return NotFound();
         }
+        else
+        {
+            Folder = folder;
+        }
+        return Page();
     }
 }
+

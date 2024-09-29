@@ -1,26 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Azure_FileExplorerApp.Data;
-using Azure_FileExplorerApp.Models;
 using Azure_FileExplorerApp.Interfaces;
 
 namespace Azure_FileExplorerApp.Pages.Folders;
 
 public class FoldersCreateModel : PageModel
 {
-    private readonly IFileService _fileService;
+    private readonly IFolderService _folderService;
 
     [BindProperty]
     public string FolderName { get; set; }
 
-    public FoldersCreateModel(IFileService fileService)
+    public FoldersCreateModel(IFolderService folderService)
     {
-        _fileService = fileService;
+        _folderService = folderService;
     }
 
     public void OnGet()
@@ -34,7 +27,7 @@ public class FoldersCreateModel : PageModel
             return Page();
         }
 
-        await _fileService.CreateFolderAsync(FolderName);
+        await _folderService.CreateFolderAsync(FolderName);
         return RedirectToPage("/Folders/Index");
     }
 }

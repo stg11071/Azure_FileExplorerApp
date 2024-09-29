@@ -1,11 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.EntityFrameworkCore;
-using Azure_FileExplorerApp.Data;
 using Azure_FileExplorerApp.Models;
 using Azure_FileExplorerApp.Interfaces;
 
@@ -13,18 +7,18 @@ namespace Azure_FileExplorerApp.Pages.Folders;
 
 public class FoldersDeleteModel : PageModel
 {
-    private readonly IFileService _fileService;
+    private readonly IFolderService _folderService;
 
-    public FoldersDeleteModel(IFileService fileService)
+    public FoldersDeleteModel(IFolderService folderService)
     {
-        _fileService = fileService;
+        _folderService = folderService;
     }
 
     public Folder Folder { get; set; }
 
     public async Task<IActionResult> OnGetAsync(int folderId)
     {
-        Folder = await _fileService.GetFolderByIdAsync(folderId);
+        Folder = await _folderService.GetFolderByIdAsync(folderId);
         if (Folder == null)
         {
             return NotFound();
@@ -34,7 +28,7 @@ public class FoldersDeleteModel : PageModel
 
     public async Task<IActionResult> OnPostAsync(int folderId)
     {
-        await _fileService.DeleteFolderAsync(folderId);
+        await _folderService.DeleteFolderAsync(folderId);
         return RedirectToPage("/Folders/Index");
     }
 }

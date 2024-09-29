@@ -1,24 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
-using Azure_FileExplorerApp.Data;
-using Azure_FileExplorerApp.Models;
 using Azure_FileExplorerApp.Interfaces;
 
 namespace Azure_FileExplorerApp.Pages.Folders;
 
 public class FoldersEditModel : PageModel
 {
-    private readonly IFileService _fileService;
+    private readonly IFolderService _folderService;
 
-    public FoldersEditModel(IFileService fileService)
+    public FoldersEditModel(IFolderService folderService)
     {
-        _fileService = fileService;
+        _folderService = folderService;
     }
 
     [BindProperty]
@@ -29,7 +21,7 @@ public class FoldersEditModel : PageModel
     // Отримуємо назву папки при GET-запиті
     public async Task<IActionResult> OnGetAsync(int folderId)
     {
-        var folder = await _fileService.GetFolderByIdAsync(folderId);
+        var folder = await _folderService.GetFolderByIdAsync(folderId);
         if (folder == null)
         {
             return NotFound();
@@ -49,14 +41,14 @@ public class FoldersEditModel : PageModel
             return Page();
         }
 
-        var folder = await _fileService.GetFolderByIdAsync(folderId);
+        var folder = await _folderService.GetFolderByIdAsync(folderId);
         if (folder == null)
         {
             return NotFound();
         }
 
         folder.Name = FolderName;
-        await _fileService.UpdateFolderAsync(folder);
+        await _folderService.UpdateFolderAsync(folder);
 
         return RedirectToPage("/Folders/Index");
     }
