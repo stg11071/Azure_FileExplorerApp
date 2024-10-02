@@ -1,0 +1,30 @@
+﻿@page
+@model Azure_FileExplorerApp.Pages.Admin.ManageRolesModel
+@{
+    ViewData["Title"] = "Керування ролями користувачів";
+}
+
+<div class="container mt-5">
+    <h2 class="text-center">Керування ролями користувачів</h2>
+
+    <div class="row justify-content-center mt-4">
+        <div class="col-md-6">
+            <form method="post" class="card p-4 shadow">
+                <div class="mb-3">
+                    <label for="SelectedUserId" class="form-label">Користувач:</label>
+                    <select asp-for="SelectedUserId" asp-items="Model.Users" class="form-select"></select>
+                </div>
+
+                <div class="mb-3">
+                    <label for="SelectedRole" class="form-label">Роль:</label>
+                    <select asp-for="SelectedRole" asp-items="Model.Roles" class="form-select"></select>
+                </div>
+
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-primary">Призначити роль</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+

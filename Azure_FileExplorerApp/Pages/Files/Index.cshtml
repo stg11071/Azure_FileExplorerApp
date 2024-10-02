@@ -1,41 +1,95 @@
 ﻿@page "{folderId:int}"
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Mvc.TagHelpers
 @model Azure_FileExplorerApp.Pages.Files.FilesIndexModel
 
 @{
     ViewData["Title"] = "Файли у папці";
 }
 
-<h1>Файли у папці: @Model.FolderName</h1>
+<h1 class="text-center">Вміст папки:  @Model.FolderName</h1>
 
-<p>
-    <a asp-page="/Files/Upload" asp-route-folderId="@Model.FolderId" class="btn btn-primary btn-sm">Завантажити новий файл</a>
-</p>
+<a asp-page="/Folders/Index" class="btn btn-secondary btn-sm me-3">Назад</a>
+<a asp-page="/Folders/Create" class="btn btn-info btn-sm mt-3 mb-3 me-3">Створити нову папку</a>
+<a asp-page="/Files/Upload" asp-route-folderId="@Model.FolderId" class="btn btn-info btn-sm me-3">Завантажити новий файл</a>
 
-<table class="table">
-    <thead>
-    <tr>
-        <th>Назва файлу</th>
-        <th>Розмір</th>
-        <th>Дата завантаження</th>
-        <th>Дії</th>
-    </tr>
-    </thead>
+
+@* <table class="table">
     <tbody>
     @foreach (var file in Model.Files)
     {
         <tr>
             <td><a href="@file.BlobUri" target="_blank">@file.FileName</a></td>
-            <td>@file.Size</td>
-            <td>@file.UploadedAt.ToString("dd/MM/yyyy")</td>
             <td>
-                    <a asp-page="/Files/Details" asp-route-fileId="@file.Id" class="btn btn-info btn-sm me-2">Details</a>
+                <a asp-page="/Files/Details" asp-route-fileId="@file.Id" class="btn btn-info btn-sm me-2">Details</a>
+
+                @if (User.IsInRole("Admin") || file.CreatedByUserId == User.FindFirstValue(ClaimTypes.NameIdentifier))
+                {
                     <a asp-page="/Files/Delete" asp-route-fileId="@file.Id" class="btn btn-danger btn-sm me-2">Видалити</a>
+                }
             </td>
         </tr>
     }
     </tbody>
-</table>
+</table> *@
 
-<p>
+<div class="row row-cols-1 row-cols-md-6 g-4 mt-3">
+    @foreach (var file in Model.Files)
+    {
+        <div class="col">
+            <div class="card-body text-center">
+                <a asp-page="/Files/Details" asp-route-fileId="@file.Id" class="text-decoration-none">
+                    <i class="fa fa-file fa-5x text-primary mb-3"></i>
+                </a>
+                <h5 class="card-title">@file.FileName</h5>
+
+                <div class="d-flex justify-content-center gap-3 mt-3">
+                    @if (User.IsInRole("Admin") || file.CreatedByUserId == User.FindFirstValue(ClaimTypes.NameIdentifier))
+                    {
+                        <a asp-page="/Files/Delete" asp-route-fileId="@file.Id" class="text-danger">
+                            <i class="fa fa-trash fa-1x"></i>
+                        </a>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/js/all.min.js"></script>
+}
+
+@* <p>
     <a asp-page="/Folders/Index" class="btn btn-secondary btn-sm mt-3">Назад</a>
-</p>
+</p> *@
+
+
+@* <table class="table">
+    <thead>
+        <tr>
+            <th>Назва файлу</th>
+            <th>Розмір</th>
+            <th>Дата завантаження</th>
+            <th>Дії</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var file in Model.Files)
+        {
+            <tr>
+                <td><a href="@file.BlobUri" target="_blank">@file.FileName</a></td>
+                <td>@file.Size</td>
+                <td>@file.UploadedAt.ToString("dd/MM/yyyy")</td>
+                <td>
+                    <a asp-page="/Files/Details" asp-route-fileId="@file.Id" class="btn btn-info btn-sm me-2">Details</a>
+
+                    @if (User.IsInRole("Admin") || file.CreatedByUserId == User.FindFirstValue(ClaimTypes.NameIdentifier))
+                    {
+                        <a asp-page="/Files/Delete" asp-route-fileId="@file.Id" class="btn btn-danger btn-sm me-2">Видалити</a>
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table> *@

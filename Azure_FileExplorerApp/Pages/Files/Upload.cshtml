@@ -5,13 +5,13 @@
     ViewData["Title"] = "Завантажити файл";
 }
 
-<h1>Завантажити файл</h1>
+<h1 class="text-center mt-5">Завантажити файл</h1>
 
-<form enctype="multipart/form-data" method="post">
+<form enctype="multipart/form-data" method="post" class="text-center mt-5">
     <div class="form-group">
         <label for="file">Оберіть файл:</label>
-        <input type="file" id="file" name="file" class="form-control" />
+        <input type="file" id="file" name="file" class="form-control mt-2" />
     </div>
-    <button type="submit" class="btn btn-primary mt-3 btn-sm me-2">Завантажити</button>
-    <a asp-page="/Files/Index" asp-route-folderId="@Model.FolderId" class="btn btn-secondary mt-3 btn-sm">Назад</a>
+    <a asp-page="/Files/Index" asp-route-folderId="@Model.FolderId" class="btn btn-secondary mt-4 btn-sm me-2">Назад</a>
+    <button type="submit" class="btn btn-primary mt-4 btn-sm me-2">Завантажити</button>
 </form>

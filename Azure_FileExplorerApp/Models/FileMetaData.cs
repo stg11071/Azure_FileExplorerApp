@@ -8,6 +8,7 @@ public class FileMetadata
     public long Size { get; set; }
     public string UploadedBy { get; set; }
     public DateTime UploadedAt { get; set; }
+    public string CreatedByUserId { get; set; }
 
     public int FolderId { get; set; } 
     public Folder Folder { get; set; } 

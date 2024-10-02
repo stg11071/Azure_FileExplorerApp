@@ -9,5 +9,6 @@ public class FileMetadataDTO
     public string UploadedBy { get; set; }
     public DateTime UploadedAt { get; set; }
     public string FolderName { get; set; }
+    public string CreatedByUserId { get; set; }
 }
 

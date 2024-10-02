@@ -1,9 +1,11 @@
 ﻿using Azure_FileExplorerApp.Models;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace Azure_FileExplorerApp.Data;
 
-public class DataContext : DbContext
+public class DataContext : IdentityDbContext<IdentityUser>
 {
     public DataContext(DbContextOptions<DataContext> options)
         : base(options)

@@ -1,36 +1,53 @@
 ﻿@page
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Mvc.TagHelpers
 @model Azure_FileExplorerApp.Pages.Folders.FoldersIndexModel
 
 @{
     ViewData["Title"] = "Папки";
 }
 
-<h1>Файловий провідник</h1>
+<h1 class="text-center">Файловий провідник</h1>
 
 <p>
-    <a asp-page="/Folders/Create" class="btn btn-primary btn-sm">Створити нову папку</a>
+    <a asp-page="/Folders/Create" class="btn btn-info btn-sm mt-3 mb-3">Створити нову папку</a>
 </p>
 
-<table class="table">
-    <thead>
-    <tr>
-        <th>Назва</th>
-        <th>Дії</th>
-    </tr>
-    </thead>
-    <tbody>
+
+<div class="row row-cols-1 row-cols-md-6 g-4">
     @foreach (var folder in Model.Folders)
     {
-        <tr>
-            <td>@folder.Name</td>
-            <td>
-                <a asp-page="/Files/Index" asp-route-folderId="@folder.Id" class="btn btn-info btn-sm me-3">Переглянути файли</a>
-                <a asp-page="/Folders/Edit" asp-route-folderId="@folder.Id" class="btn btn-warning btn-sm me-3">Редагувати</a>
-                <a asp-page="/Folders/Delete" asp-route-folderId="@folder.Id" class="btn btn-danger btn-sm me-3">Видалити</a>
-            </td>
-        </tr>
+        <div class="col">
+            <div class="card-body text-center">
+                <a asp-page="/Files/Index" asp-route-folderId="@folder.Id">
+                    <i class="fa fa-folder fa-5x text-warning mb-3"></i> 
+                </a>
+                <h5 class="card-title">@folder.Name</h5>
+
+                <div class="d-grid gap-2 d-md-flex justify-content-center mt-3">
+                    
+                    @if (User.IsInRole("Admin") || User.IsInRole("Manager") || folder.CreatedByUserId == User.FindFirstValue(ClaimTypes.NameIdentifier))
+                    {
+                        <a asp-page="/Folders/Edit" asp-route-folderId="@folder.Id" class="text-success">
+                            <i class="fa fa-edit fa-1x"></i> 
+                        </a>
+                    }
+
+                    @if (User.IsInRole("Admin") || folder.CreatedByUserId == User.FindFirstValue(ClaimTypes.NameIdentifier))
+                    {
+                        <a asp-page="/Folders/Delete" asp-route-folderId="@folder.Id" class="text-danger">
+                            <i class="fa fa-trash fa-1x"></i> 
+                        </a>
+                    }
+                </div>
+            </div>
+        </div>
     }
-    </tbody>
-</table>
+</div>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/js/all.min.js"></script>
+}
+
 
 

@@ -3,9 +3,11 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Azure_FileExplorerApp.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Azure_FileExplorerApp.Pages.Folders;
 
+[Authorize]
 public class DetailsModel : PageModel
 {
     private readonly DataContext _context;

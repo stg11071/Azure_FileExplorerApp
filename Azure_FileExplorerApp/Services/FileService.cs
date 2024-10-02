@@ -3,6 +3,7 @@ using Azure_FileExplorerApp.DTOs;
 using Azure_FileExplorerApp.Interfaces;
 using Azure_FileExplorerApp.Models;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace Azure_FileExplorerApp.Services;
 
@@ -12,13 +13,15 @@ public class FileService : IFileService
     private readonly DataContext _dbContext;
     private readonly ILogger<FileService> _logger;
     private readonly ICacheService _cacheService;
+    private readonly IHttpContextAccessor _httpContextAccessor;
 
-    public FileService(BlobService blobService, DataContext dbContext, ILogger<FileService> logger, ICacheService cacheService)
+    public FileService(BlobService blobService, DataContext dbContext, ILogger<FileService> logger, ICacheService cacheService, IHttpContextAccessor httpContextAccessor)
     {
         _blobService = blobService;
         _dbContext = dbContext;
         _logger = logger;
         _cacheService = cacheService;
+        _httpContextAccessor = httpContextAccessor;
     }
 
     // Завантаження файлу в папку (якщо передано folderId)
@@ -26,21 +29,32 @@ public class FileService : IFileService
     {
         try
         {
+            // Завантажуємо файл в Blob Storage через BlobService
             var blobUrl = await _blobService.UploadFileAsync(fileName, data);
 
+            // Отримуємо ID користувача (CreatedByUserId)
+            var createdByUserId = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            // Якщо користувач не автентифікований, задаємо значення Anonymous
+            var uploadedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name ?? "Anonymous";
+
+            // Створюємо метадані файлу
             var fileMetadata = new FileMetadata
             {
                 FileName = fileName,
                 BlobUri = blobUrl,
                 Size = data.Count(),
-                UploadedBy = "Anonymous",
+                UploadedBy = uploadedBy,
+                CreatedByUserId = createdByUserId, // Записуємо ID користувача
+                UploadedAt = DateTime.UtcNow,
                 FolderId = folderId ?? 0 // якщо папка не вказана, встановлюємо значення 0
             };
 
+            // Додаємо метадані файлу в базу даних
             _dbContext.Files.Add(fileMetadata);
             await _dbContext.SaveChangesAsync();
 
-            // Очищаємо кеш для всіх файлів та файлів у конкретній папці
+            // Очищуємо кеш для всіх файлів та файлів у конкретній папці
             await _cacheService.RemoveCacheData("all_files");
             if (folderId.HasValue)
             {
@@ -55,6 +69,7 @@ public class FileService : IFileService
             throw;
         }
     }
+
 
     // Видалення файлу через Blob URI
     public async Task DeleteFileAsync(string blobUri)
@@ -181,7 +196,8 @@ public class FileService : IFileService
                 UploadedBy = f.UploadedBy,
                 UploadedAt = f.UploadedAt,
                 FolderName = f.Folder.Name,
-            });
+                CreatedByUserId = f.CreatedByUserId,
+});
 
             // зберігаємо файли у кеші як DTO
             await _cacheService.AddCacheData(cacheKey, filesDto);

@@ -3,6 +3,7 @@ using Azure_FileExplorerApp.Interfaces;
 using Azure_FileExplorerApp.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
+using System.Security.Claims;
 
 namespace Azure_FileExplorerApp.Services;
 
@@ -11,12 +12,14 @@ public class FolderService : IFolderService
     private readonly DataContext _dbContext;
     private readonly ILogger<FolderService> _logger;
     private readonly ICacheService _cacheService;
+    private readonly IHttpContextAccessor _httpContextAccessor;
 
-    public FolderService(DataContext dbContext, ILogger<FolderService> logger, ICacheService cacheService)
+    public FolderService(DataContext dbContext, ILogger<FolderService> logger, ICacheService cacheService, IHttpContextAccessor httpContextAccessor)
     {
         _dbContext = dbContext;
         _logger = logger;
         _cacheService = cacheService;
+        _httpContextAccessor = httpContextAccessor;
     }
 
     // створення нової папки
@@ -34,7 +37,13 @@ public class FolderService : IFolderService
                 return null; // повертаємо існуючу папку
             }
 
-            var folder = new Folder { Name = folderName };
+            var createdByUserId = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            var folder = new Folder
+            {
+                Name = folderName,
+                CreatedByUserId = createdByUserId
+            };
             _dbContext.Folders.Add(folder);
             await _dbContext.SaveChangesAsync();
 
@@ -122,6 +131,7 @@ public class FolderService : IFolderService
         return folder?.Name; // повертаємо ім'я папки або null, якщо папка не знайдена
     }
 
+
     // оновлення інформації про папку
     public async Task UpdateFolderAsync(Folder folder)
     {
@@ -130,8 +140,8 @@ public class FolderService : IFolderService
             _dbContext.Folders.Update(folder);
             await _dbContext.SaveChangesAsync();
 
-            // очищуємо кеш для цієї папки
-            await _cacheService.RemoveCacheData($"folder_{folder.Id}");
+            // очищення кешу для всіх папок
+            await _cacheService.RemoveCacheData("all_folders");
         }
         catch (Exception ex)
         {

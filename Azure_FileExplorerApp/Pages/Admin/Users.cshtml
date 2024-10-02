@@ -1,0 +1,65 @@
+﻿@page
+@model Azure_FileExplorerApp.Pages.Admin.UsersModel
+@{
+}
+
+<h1 class="text-center mt-5">Список користувачів</h1>
+
+<table class="table mt-5">
+    <thead>
+    <tr>
+        <th>Email</th>
+        <th>Ролі</th>
+        <th>Дії</th>
+    </tr>
+    </thead>
+    <tbody>
+    @foreach (var user in Model.Users)
+    {
+        <tr>
+            <td>@user.Email</td>
+            <td>@string.Join(", ", user.Roles)</td>
+            <td style="display: flex; align-items: center; gap: 10px;">
+                <form method="post">
+                    <button type="submit" asp-page-handler="EditRole" class="btn btn-success btn-sm">Редагувати роль</button>
+                    <select asp-for="SelectedRole" asp-items="Model.AllRoles" class="me-4"></select>
+                    <input type="hidden" name="userId" value="@user.Id"/>
+                </form>
+
+               
+                @if (!user.LockoutEnabled || !user.LockoutEnd.HasValue || user.LockoutEnd.Value < DateTimeOffset.UtcNow)
+                {
+                    <form method="post" asp-page-handler="BlockUser" asp-route-id="@user.Id">
+                        <button type="submit" class="btn btn-secondary me-4 btn-sm">Заблокувати</button>
+                    </form>
+                }
+                else
+                {
+                    <form method="post" asp-page-handler="UnblockUser" asp-route-id="@user.Id">
+                        <button type="submit" class="btn btn-secondary me-4 btn-sm">Розблокувати</button>
+                    </form>
+                }
+                
+
+                <form method="post" asp-page-handler="DeleteUser" asp-route-id="@user.Id">
+                    <button type="submit" class="btn btn-danger me-4 btn-sm">Видалити</button>
+                </form>
+            
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>
+
+
+  @* @if (!user.LockoutEnabled || !user.LockoutEnd.HasValue || user.LockoutEnd.Value < DateTimeOffset.UtcNow)
+                    {
+                        <a class="btn btn-secondary me-4 btn-sm" asp-page-handler="BlockUser" asp-route-id="@user.Id">Заблокувати</a>
+                    }
+                    else
+                    {
+                        <a class="btn btn-secondary me-4 btn-sm" asp-page-handler="UnblockUser" asp-route-id="@user.Id">Розблокувати</a>
+                    }
+                
+                    <a class="btn btn-danger me-4 btn-sm" asp-page-handler="DeleteUser" asp-route-id="@user.Id">Видалити</a> *@
+

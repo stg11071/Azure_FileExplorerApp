@@ -5,14 +5,15 @@
     ViewData["Title"] = "Створити нову папку";
 }
 
-<h1>Створити нову папку</h1>
+<h1 class="text-center mt-5">Створити нову папку</h1>
 
-<form method="post">
+<form method="post" class="text-center mt-5">
     <div class="form-group">
         <label asp-for="FolderName"></label>
-        <input asp-for="FolderName" class="form-control" />
+        <input asp-for="FolderName" class="form-control mt-3" />
         <span asp-validation-for="FolderName" class="text-danger"></span>
     </div>
-    <button type="submit" class="btn btn-primary btn-sm mt-3 me-2">Створити</button>
-    <a asp-page="/Folders/Index" class="btn btn-secondary btn-sm mt-3 me-2">Назад</a>
+
+    <a asp-page="/Folders/Index" class="btn btn-secondary btn-sm mt-5 me-2">Назад</a>
+    <button type="submit" class="btn btn-primary btn-sm mt-5 me-2">Створити</button>
 </form>

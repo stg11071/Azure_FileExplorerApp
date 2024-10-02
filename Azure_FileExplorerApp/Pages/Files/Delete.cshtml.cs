@@ -1,16 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.EntityFrameworkCore;
-using Azure_FileExplorerApp.Data;
 using Azure_FileExplorerApp.Models;
 using Azure_FileExplorerApp.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Azure_FileExplorerApp.Pages.Files;
 
+[Authorize]
 public class FilesDeleteModel : PageModel
 {
     private readonly IFileService _fileService;

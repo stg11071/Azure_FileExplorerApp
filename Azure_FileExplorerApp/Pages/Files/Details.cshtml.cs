@@ -3,9 +3,11 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Azure_FileExplorerApp.Data;
 using Azure_FileExplorerApp.Models;
 using Azure_FileExplorerApp.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Azure_FileExplorerApp.Pages.Files;
 
+[Authorize]
 public class FilesDetailsModel : PageModel
 {
     private readonly IFileService _fileService;

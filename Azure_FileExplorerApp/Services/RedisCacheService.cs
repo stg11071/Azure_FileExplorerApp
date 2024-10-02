@@ -20,7 +20,6 @@ public class RedisCacheService : ICacheService
     public async Task AddCacheData<T>(string key, T value)
     {
         await _database.StringSetAsync(key, JsonSerializer.Serialize(value), expiry: TimeSpan.FromMinutes(60));
-        Console.WriteLine();
     }
 
 

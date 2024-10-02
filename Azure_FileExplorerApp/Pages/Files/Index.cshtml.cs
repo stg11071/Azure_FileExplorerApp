@@ -3,9 +3,11 @@ using Azure_FileExplorerApp.Models;
 using Azure_FileExplorerApp.DTOs;
 using Azure_FileExplorerApp.Interfaces;
 using Azure_FileExplorerApp.Services;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Azure_FileExplorerApp.Pages.Files;
 
+[Authorize]
 public class FilesIndexModel : PageModel
 {
     private readonly IFileService _fileService;

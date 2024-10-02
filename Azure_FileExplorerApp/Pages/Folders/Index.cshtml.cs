@@ -1,9 +1,11 @@
 ﻿using Microsoft.AspNetCore.Mvc.RazorPages;
 using Azure_FileExplorerApp.Models;
 using Azure_FileExplorerApp.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Azure_FileExplorerApp.Pages.Folders;
 
+[Authorize]
 public class FoldersIndexModel : PageModel
 {
     private readonly IFolderService _folderService;
