@@ -1,6 +1,8 @@
-﻿namespace Azure_FileExplorerApp.Models;
+﻿using Azure_FileExplorerApp.Models;
 
-public class Folder
+namespace Azure_FileExplorerApp.DTOs;
+
+public class FolderDTO
 {
     public int Id { get; set; }
     public string Name { get; set; }
@@ -8,6 +10,5 @@ public class Folder
 
     public int? ParentFolderId { get; set; }
 
-    public virtual ICollection<FileMetadata> Files { get; set; }
+    public List<FileMetadataDTO> Files { get; set; }
 }
-

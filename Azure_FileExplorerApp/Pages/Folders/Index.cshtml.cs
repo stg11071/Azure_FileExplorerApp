@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc.RazorPages;
+﻿using Azure_FileExplorerApp.DTOs;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 using Azure_FileExplorerApp.Models;
 using Azure_FileExplorerApp.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -15,11 +16,13 @@ public class FoldersIndexModel : PageModel
         _folderService = folderService;
     }
 
-    public IEnumerable<Folder> Folders { get; set; }
+    public IEnumerable<FolderDTO> Folders { get; set; }
 
     public async Task OnGetAsync()
     {
-        Folders = await _folderService.GetAllFoldersAsync();
+        var allFolders = await _folderService.GetAllFoldersAsync();
+
+        Folders = allFolders.Where(f => f.ParentFolderId == null).ToList();
     }
 }
 

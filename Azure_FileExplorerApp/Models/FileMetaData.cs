@@ -11,5 +11,5 @@ public class FileMetadata
     public string CreatedByUserId { get; set; }
 
     public int FolderId { get; set; } 
-    public Folder Folder { get; set; } 
+    public virtual Folder Folder { get; set; } 
 }

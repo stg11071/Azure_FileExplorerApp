@@ -38,7 +38,6 @@ public class FilesDeleteModel : PageModel
             return NotFound();
         }
 
-
         await _fileService.DeleteFileAsync(FileMetadata.BlobUri);
         return RedirectToPage("/Files/Index", new { folderId = FileMetadata.FolderId });
     }

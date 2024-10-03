@@ -2,6 +2,7 @@ using Azure.Identity;
 using Azure_FileExplorerApp;
 using Azure_FileExplorerApp.Data;
 using Azure_FileExplorerApp.Interfaces;
+using Azure_FileExplorerApp.Middleware;
 using Azure_FileExplorerApp.Services;
 using AzureTeacherStudentSystem;
 using Microsoft.AspNetCore.Identity;
@@ -15,12 +16,12 @@ var keyVaultEndpoint = new Uri(Environment.GetEnvironmentVariable("VaultUri"));
 builder.Configuration.AddAzureKeyVault(keyVaultEndpoint, new DefaultAzureCredential());
 
 //SQL
-//var sqlConnectionString = builder.Configuration["AzureFileExplorerSqlConnectionString"];
-//builder.Services.AddDbContext<DataContext>(opt =>
-//    opt.UseSqlServer(sqlConnectionString));
-
+var sqlConnectionString = builder.Configuration["AzureFileExplorerSqlConnectionString"];
 builder.Services.AddDbContext<DataContext>(opt =>
-    opt.UseSqlServer(builder.Configuration.GetConnectionString("Local")));
+    opt.UseSqlServer(sqlConnectionString));
+
+//builder.Services.AddDbContext<DataContext>(opt =>
+//    opt.UseSqlServer(builder.Configuration.GetConnectionString("Local")));
 
 // Blob Storage
 var storageConnectionString = builder.Configuration["StorageAccountConnectionString07"];
@@ -39,9 +40,25 @@ builder.Services.AddAzureClients(clientBuilder =>
 builder.Services.AddTransient<IFileService, FileService>();
 builder.Services.AddTransient<IFolderService, FolderService>();
 
-// кешування
-builder.Services.AddSingleton(_ => ConnectionMultiplexer.Connect(builder.Configuration["Redis"]).GetDatabase());
+// Кешування
+// реєстрація IConnectionMultiplexer для доступу до Redis
+builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
+{
+    var configuration = ConfigurationOptions.Parse(builder.Configuration["Redis"], true);
+    return ConnectionMultiplexer.Connect(configuration);
+});
+
+// реєстрація IDatabase для кешування через Redis
+builder.Services.AddSingleton(sp =>
+{
+    var multiplexer = sp.GetRequiredService<IConnectionMultiplexer>();
+    return multiplexer.GetDatabase(); // отримання базу даних Redis
+});
+
+// реєстрація CacheService
 builder.Services.AddScoped<ICacheService, RedisCacheService>();
+
+
 
 // Identity для керування користувачами та ролями
 builder.Services.AddIdentity<IdentityUser, IdentityRole>()
@@ -89,6 +106,9 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
+
+// глобальний обробник виключень
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 app.UseAuthentication();
 app.UseAuthorization();

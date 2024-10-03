@@ -5,7 +5,7 @@
 namespace Azure_FileExplorerApp.Migrations
 {
     /// <inheritdoc />
-    public partial class addCreatedByUserId : Migration
+    public partial class modifyFolderModel : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -38,19 +38,13 @@ namespace Azure_FileExplorerApp.Migrations
                 name: "FK_Files_Folders_FolderId",
                 table: "Files");
 
-            migrationBuilder.AddColumn<string>(
-                name: "CreatedByUserId",
-                table: "Folders",
-                type: "nvarchar(max)",
-                nullable: false,
-                defaultValue: "");
+            migrationBuilder.DropForeignKey(
+                name: "FK_Folders_Folders_ParentFolderId",
+                table: "Folders");
 
-            migrationBuilder.AddColumn<string>(
-                name: "CreatedByUserId",
-                table: "Files",
-                type: "nvarchar(max)",
-                nullable: false,
-                defaultValue: "");
+            migrationBuilder.DropIndex(
+                name: "IX_Folders_ParentFolderId",
+                table: "Folders");
 
             migrationBuilder.AddForeignKey(
                 name: "FK_AspNetRoleClaims_AspNetRoles_RoleId",
@@ -140,13 +134,10 @@ namespace Azure_FileExplorerApp.Migrations
                 name: "FK_Files_Folders_FolderId",
                 table: "Files");
 
-            migrationBuilder.DropColumn(
-                name: "CreatedByUserId",
-                table: "Folders");
-
-            migrationBuilder.DropColumn(
-                name: "CreatedByUserId",
-                table: "Files");
+            migrationBuilder.CreateIndex(
+                name: "IX_Folders_ParentFolderId",
+                table: "Folders",
+                column: "ParentFolderId");
 
             migrationBuilder.AddForeignKey(
                 name: "FK_AspNetRoleClaims_AspNetRoles_RoleId",
@@ -203,6 +194,13 @@ namespace Azure_FileExplorerApp.Migrations
                 principalTable: "Folders",
                 principalColumn: "Id",
                 onDelete: ReferentialAction.Restrict);
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_Folders_Folders_ParentFolderId",
+                table: "Folders",
+                column: "ParentFolderId",
+                principalTable: "Folders",
+                principalColumn: "Id");
         }
     }
 }

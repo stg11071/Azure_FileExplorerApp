@@ -4,6 +4,7 @@ using Azure_FileExplorerApp.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Azure_FileExplorerApp.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20241002205413_addSubFoldersSupport")]
+    partial class addSubFoldersSupport
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -82,6 +85,8 @@ namespace Azure_FileExplorerApp.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ParentFolderId");
 
                     b.ToTable("Folders");
                 });
@@ -295,6 +300,15 @@ namespace Azure_FileExplorerApp.Migrations
                     b.Navigation("Folder");
                 });
 
+            modelBuilder.Entity("Azure_FileExplorerApp.Models.Folder", b =>
+                {
+                    b.HasOne("Azure_FileExplorerApp.Models.Folder", "ParentFolder")
+                        .WithMany("SubFolders")
+                        .HasForeignKey("ParentFolderId");
+
+                    b.Navigation("ParentFolder");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -349,6 +363,8 @@ namespace Azure_FileExplorerApp.Migrations
             modelBuilder.Entity("Azure_FileExplorerApp.Models.Folder", b =>
                 {
                     b.Navigation("Files");
+
+                    b.Navigation("SubFolders");
                 });
 #pragma warning restore 612, 618
         }

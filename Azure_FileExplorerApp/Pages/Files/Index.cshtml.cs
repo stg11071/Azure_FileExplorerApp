@@ -4,6 +4,7 @@ using Azure_FileExplorerApp.DTOs;
 using Azure_FileExplorerApp.Interfaces;
 using Azure_FileExplorerApp.Services;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Azure_FileExplorerApp.Pages.Files;
 
@@ -22,20 +23,23 @@ public class FilesIndexModel : PageModel
     public int FolderId { get; set; }
     public string FolderName { get; set; }
     public IEnumerable<FileMetadataDTO> Files { get; set; }
+    public IEnumerable<FolderDTO> SubFolders { get; set; }
 
-    public async Task OnGetAsync(int folderId)
+    public async Task<IActionResult> OnGetAsync(int folderId)
     {
         FolderId = folderId;
+
+        var folder = await _folderService.GetFolderByIdAsync(folderId);
+
+        if (folder == null)
+            return NotFound();
+
+        FolderName = folder.Name;
         Files = await _fileService.GetFilesInFolderAsync(folderId);
 
-        // Якщо папка порожня, отримуємо її ім'я через окремий сервіс
-        if (Files.Any())
-        {
-            FolderName = Files.FirstOrDefault()?.FolderName ?? "Невідома папка";
-        }
-        else
-        {
-            FolderName = await _folderService.GetFolderNameByIdAsync(folderId) ?? "Невідома папка";
-        }
+        var folders = await _folderService.GetAllFoldersAsync();
+        SubFolders = folders.Where(f => f.ParentFolderId == folderId);
+
+        return Page();
     }
 }

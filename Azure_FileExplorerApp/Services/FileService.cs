@@ -29,38 +29,36 @@ public class FileService : IFileService
     {
         try
         {
-            // Завантажуємо файл в Blob Storage через BlobService
+            // завантаження файлу в Blob Storage через BlobService
             var blobUrl = await _blobService.UploadFileAsync(fileName, data);
 
-            // Отримуємо ID користувача (CreatedByUserId)
+            // отримання ID користувача (CreatedByUserId)
             var createdByUserId = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-            // Якщо користувач не автентифікований, задаємо значення Anonymous
+            // отримання Name користувача 
             var uploadedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name ?? "Anonymous";
 
-            // Створюємо метадані файлу
+            // створення метаданих файлу
             var fileMetadata = new FileMetadata
             {
                 FileName = fileName,
                 BlobUri = blobUrl,
                 Size = data.Count(),
                 UploadedBy = uploadedBy,
-                CreatedByUserId = createdByUserId, // Записуємо ID користувача
+                CreatedByUserId = createdByUserId,
                 UploadedAt = DateTime.UtcNow,
-                FolderId = folderId ?? 0 // якщо папка не вказана, встановлюємо значення 0
+                FolderId = folderId ?? 0
             };
 
-            // Додаємо метадані файлу в базу даних
+            // додавання метаданих файлу в базу даних
             _dbContext.Files.Add(fileMetadata);
             await _dbContext.SaveChangesAsync();
 
-            // Очищуємо кеш для всіх файлів та файлів у конкретній папці
+            // очищення кешу для всіх файлів та файлів у конкретній папці
             await _cacheService.RemoveCacheData("all_files");
             if (folderId.HasValue)
-            {
                 await _cacheService.RemoveCacheData($"files_in_folder_{folderId}");
-            }
-
+            
             return blobUrl;
         }
         catch (Exception ex)
@@ -108,7 +106,7 @@ public class FileService : IFileService
         {
             var cacheKey = $"file_{id}";
 
-            // перевіряємо наявність файлу в кеші
+            // перевірка наявність файлу в кеші
             var cachedFile = await _cacheService.GetCacheData<FileMetadata>(cacheKey);
             if (cachedFile != null)
             {
@@ -123,7 +121,7 @@ public class FileService : IFileService
                 throw new Exception($"File with ID {id} not found");
             }
 
-            // зберігаємо дані в кеші
+            // зберігання даних в кеші
             await _cacheService.AddCacheData(cacheKey, fileMetadata);
 
             return fileMetadata;
@@ -172,7 +170,7 @@ public class FileService : IFileService
         {
             var cacheKey = $"files_in_folder_{folderId}";
 
-            // перевіряємо наявність файлів у кеші
+            // перевірка наявністі файлів у кеші
             var cachedFiles = await _cacheService.GetCacheData<IEnumerable<FileMetadataDTO>>(cacheKey);
             if (cachedFiles != null)
             {
@@ -180,13 +178,13 @@ public class FileService : IFileService
                 return cachedFiles;
             }
 
-            // якщо файлів немає у кеші, отримуємо їх з бази даних
+            // отримання файлів з бази даних, якщо іх немає у кеші
             var files = await _dbContext.Files
                 .Include(f => f.Folder)
                 .Where(f => f.FolderId == folderId)
                 .ToListAsync();
 
-            // перетворюємо файли на DTO для кешування
+            // перетворення на DTO для кешування
             var filesDto = files.Select(f => new FileMetadataDTO
             {
                 Id = f.Id,
@@ -199,7 +197,7 @@ public class FileService : IFileService
                 CreatedByUserId = f.CreatedByUserId,
 });
 
-            // зберігаємо файли у кеші як DTO
+            // зберігання у кеші
             await _cacheService.AddCacheData(cacheKey, filesDto);
 
             return filesDto;

@@ -1,8 +1,8 @@
 ﻿using Azure_FileExplorerApp.Data;
+using Azure_FileExplorerApp.DTOs;
 using Azure_FileExplorerApp.Interfaces;
 using Azure_FileExplorerApp.Models;
 using Microsoft.EntityFrameworkCore;
-using System.Diagnostics;
 using System.Security.Claims;
 
 namespace Azure_FileExplorerApp.Services;
@@ -23,27 +23,27 @@ public class FolderService : IFolderService
     }
 
     // створення нової папки
-    public async Task<Folder> CreateFolderAsync(string folderName)
+    public async Task<Folder> CreateFolderAsync(Folder folder)
     {
         try
         {
-            // перевірка, чи існує вже папка з таким ім'ям
+            // перевірка, чи існує вже папка з таким ім'ям (і, можливо, з тим же батьківським ID)
             var existingFolder = await _dbContext.Folders
-                .FirstOrDefaultAsync(f => f.Name == folderName);
+                .FirstOrDefaultAsync(f => f.Name == folder.Name && f.ParentFolderId == folder.ParentFolderId);
 
             if (existingFolder != null)
             {
-                _logger.LogWarning("Папка з ім'ям {folderName} вже існує", folderName);
-                return null; // повертаємо існуючу папку
+                _logger.LogWarning("Папка з ім'ям {folderName} вже існує", folder.Name);
+                return null; // повертаємо null, оскільки папка вже існує
             }
 
+            // отримання ID користувача, який створює папку
             var createdByUserId = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-            var folder = new Folder
+            if (!string.IsNullOrEmpty(createdByUserId))
             {
-                Name = folderName,
-                CreatedByUserId = createdByUserId
-            };
+                folder.CreatedByUserId = createdByUserId;
+            }
+
             _dbContext.Folders.Add(folder);
             await _dbContext.SaveChangesAsync();
 
@@ -54,20 +54,21 @@ public class FolderService : IFolderService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Помилка при створенні нової папки з ім'ям {folderName}", folderName);
-            throw; // повторно кидаємо виключення для глобальної обробки
+            _logger.LogError(ex, "Помилка при створенні нової папки з ім'ям {folderName}", folder.Name);
+            throw; // проброс виключення для глобальної обробки
         }
     }
 
+
     // отримання всіх папок
-    public async Task<IEnumerable<Folder>> GetAllFoldersAsync()
+    public async Task<IEnumerable<FolderDTO>> GetAllFoldersAsync()
     {
         try
         {
             var cacheKey = "all_folders";
-            
+
             // перевіряємо наявність папок у кеші
-            var cachedFolders = await _cacheService.GetCacheData<IEnumerable<Folder>>(cacheKey);
+            var cachedFolders = await _cacheService.GetCacheData<IEnumerable<FolderDTO>>(cacheKey);
             if (cachedFolders != null)
             {
                 _logger.LogInformation("Отримано папки з кешу");
@@ -75,12 +76,17 @@ public class FolderService : IFolderService
             }
 
             // якщо папок немає у кеші, отримуємо їх з бази даних
-            var folders = await _dbContext.Folders.ToListAsync();
+            var folders = await _dbContext.Folders
+                .Include(f => f.Files) // Включаємо файли
+                .ToListAsync();
 
-            // зберігаємо папки у кеші
-            await _cacheService.AddCacheData(cacheKey, folders);
+            // перетворення папок в DTO
+            var folderDTOs = folders.Select(f => ConvertToFolderDTO(f)).ToList();
 
-            return folders;
+            // зберігання папок у кеші
+            await _cacheService.AddCacheData(cacheKey, folderDTOs);
+
+            return folderDTOs;
         }
         catch (Exception ex)
         {
@@ -89,14 +95,32 @@ public class FolderService : IFolderService
         }
     }
 
-    // отримання папки за ID
+
+    public FolderDTO ConvertToFolderDTO(Folder folder)
+    {
+        return new FolderDTO
+        {
+            Id = folder.Id,
+            Name = folder.Name,
+            CreatedByUserId = folder.CreatedByUserId,
+            ParentFolderId = folder.ParentFolderId,
+            Files = folder.Files?.Select(f => new FileMetadataDTO
+            {
+                Id = f.Id,
+                FileName = f.FileName,
+                BlobUri = f.BlobUri
+            }).ToList() ?? new List<FileMetadataDTO>(), // Якщо немає файлів, повертаємо порожній список
+        };
+    }
+
+    // Отримання папки за ID
     public async Task<Folder> GetFolderByIdAsync(int folderId)
     {
         try
         {
             var cacheKey = $"folder_{folderId}";
 
-            // перевіряємо наявність папки в кеші
+            // перевірка наявності папки в кеші
             var cachedFolder = await _cacheService.GetCacheData<Folder>(cacheKey);
             if (cachedFolder != null)
             {
@@ -104,15 +128,17 @@ public class FolderService : IFolderService
                 return cachedFolder;
             }
 
-            // отримуємо папку з бази даних
-            var folder = await _dbContext.Folders.FindAsync(folderId);
+            // отримання папки з бази даних
+            var folder = await _dbContext.Folders
+                .Include(f => f.Files)
+                .FirstOrDefaultAsync(f => f.Id == folderId);
             if (folder == null)
             {
                 _logger.LogWarning($"Папку з ID {folderId} не знайдено");
-                return null; // або кидаємо виняток, якщо це критично
+                return null;
             }
 
-            // зберігаємо папку в кеші
+            // зберігання папки в кеші
             await _cacheService.AddCacheData(cacheKey, folder);
 
             return folder;
@@ -155,20 +181,27 @@ public class FolderService : IFolderService
     {
         try
         {
-            var folder = await _dbContext.Folders
-                .Include(f => f.Files)
-                .FirstOrDefaultAsync(f => f.Id == folderId);
+            var folders = _dbContext.Folders
+                .Include(f => f.Files);
+            
+            var folder = await folders.FirstOrDefaultAsync(f => f.Id == folderId);
+
             if (folder == null)
             {
                 _logger.LogWarning($"Папку з ID {folderId} не знайдено");
                 return; // або кидаємо виняток, якщо це критично
             }
 
-            // видаляємо папку і всі файли в ній
+            // видалення папки і всіх файлів в ній
             _dbContext.Folders.Remove(folder);
+            //видалення всіх папок дочірніх папок
+            var subFolders = folders.Where(f => f.ParentFolderId == folderId);
+            _dbContext.Folders.RemoveRange(subFolders);
+
             await _dbContext.SaveChangesAsync();
 
-            // очищуємо кеш для цієї папки
+
+            // очищення кешу для цієї папки
             await _cacheService.RemoveCacheData($"folder_{folderId}");
 
 
